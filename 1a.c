@@ -11,7 +11,7 @@ int main(int argc, char**argv){
         printf("Error linea comandos");
         return 1;
     }
-    int i, status, a=atoi(argv[1]), global=0;
+    int i, status, a=atoi(argv[1]);
     pid_t pid, childpid;
     for(i=0; i<a; i++){
         pid=fork();
@@ -23,13 +23,11 @@ int main(int argc, char**argv){
 
         else if(pid==0){
             printf("Soy el hijo %d de mi padre %d\n", getpid(), getppid());
-            global++;
             exit(EXIT_SUCCESS);
         }
 
         else{
             printf("Soy el padre %d\n",  getpid());
-            printf("El valor global es %d", global);
         }        
     }
     while((childpid=waitpid(-1, &status, WUNTRACED|WCONTINUED))>0){

@@ -1,60 +1,50 @@
-//crear 2 hijos. Uno de ellos que abra la calculadora y el otro un editor de texto 
-//Que el padre espere a sus hijos 
-
-#include<string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include<errno.h>
-#include<stdlib.h>
-#include<sys/wait.h>
-#include<unistd.h>
-#include<stdio.h>
 
-
-int main(int argc,char const *argv[])
-{     
-    int status;
-    pid_t child_1,child_2;
-    int n;
-    
-    for (int i=1;i<=n;i++)
-    {
-        switch(fork())
-        {
-            case -1:
-           
-            printf("ERROR EN LA CREACION DEL HIJO\n");
+int main(int argc, char** argv){
+   if(argc<3){
+        printf("Error linea de comandos\n");
+        exit(-1);
+    }
+    int i, status;
+    pid_t pid, childpid;
+    for(i=0; i<2; i++){
+        pid=fork();
+        if(pid==-1){
+            printf("Error fork");
             exit(EXIT_FAILURE);
-            
-
-            case 0:
-            
-                printf("CREACION DE EL HIJO %d CON PID %d \n", i+1,getpid());
-                if (i==1)
-                {
-                    execlp(argv[i], argv[i], NULL);
-                    i++;
-                }
-                else 
-                {
-                    execlp(argv[1], argv[1], NULL);
-                }
-            exit(EXIT_SUCCESS);
-
-            default:
-                printf("ESPERANDO A QUE SE CREE MI HIJO NUMERO %d \n", i+1);
-            
+        }
+        else if(pid==0){
+            if(i==0){
+                execlp(argv[1], argv[1], NULL);
+                exit(EXIT_SUCCESS);
+            }
+            else{
+                execvp(argv[2], &argv[2]);
+                exit(EXIT_SUCCESS);
+            }
         }
     }
-    child_1=wait(&status);
-    printf("MI HIJO %d CON CODIGO DE SALIDA %d HA ACABADO \n",child_1, WEXITSTATUS(status) );
-    
-    child_2=wait(&status);
-    printf("MI HIJO %d CON CODIGO DE SALIDA %d HA ACABADO \n",child_2, WEXITSTATUS(status) );
 
+    while((childpid=waitpid(-1, &status, WUNTRACED|WCONTINUED))>0){
+        if(WIFEXITED(status)){
+            printf("Hijo %d recogido\n", childpid);
+        }
+        if(WIFSIGNALED(status)){
+            printf("Hijo %d terminado por señal\n", childpid);
+        }
+    }
+    if(childpid==(pid_t)-1 && errno==ECHILD){
+        printf("No mas hijos\n");
+    }
+    else{
+        printf("Error waitpid\n");
+        exit(EXIT_FAILURE);
+    }
     exit(EXIT_SUCCESS);
-
+    return 0;
 }
-
-
-
-//     ./miPrograma gnome-calculator gedit fichero1.txt fichero2.txt ficheroN.txt
-
